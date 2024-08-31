@@ -131,7 +131,7 @@ class SiteAppReten():
             buttons_class = EncontrarBotoes(self.nav)
             
             try:
-                buttons_class.find_per_text('Exportar', type='in').click()
+                buttons_class.find_per_text('Exportar', type='in', timeout=2).click()
             except NoSuchElementException:
                 buttons_class.find_per_attribute(attribute='data-id', target='more').click()
                 buttons_class.find_per_text('Exportar', type='in').click()
@@ -143,6 +143,8 @@ class SiteAppReten():
             self.verificar_arquivos_em_download(self.nav.download_path)
             
             print(P("extração concluida", color='green'))
+            
+            return os.path.join(self.nav.download_path, os.listdir(self.nav.download_path)[0])
             
     def limpar_pasta(self, path:str) -> bool:
         print(P("Limpando pasta"))

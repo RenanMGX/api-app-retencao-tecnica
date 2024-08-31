@@ -8,7 +8,7 @@ from typing import Literal, Dict
 import asyncio
 
 class Credential:
-    def __init__(self, name_file:Literal["Microsoft-RPA"], path:str=f"C:\\Users\\{getuser()}\\PATRIMAR ENGENHARIA S A\\RPA - Documentos\\RPA - Dados\\CRD\\.patrimar_rpa\\credenciais\\") -> None:
+    def __init__(self, name_file:Literal["Microsoft-RPA", "API_ZENDESK"], path:str=f"C:\\Users\\{getuser()}\\PATRIMAR ENGENHARIA S A\\RPA - Documentos\\RPA - Dados\\CRD\\.patrimar_rpa\\credenciais\\") -> None:
         name:str = str(name_file)
         if not isinstance(path, str):
             raise TypeError("apenas strings")
@@ -117,7 +117,7 @@ class Credential:
         return self.criar_cifra(text, -key)
         
 if __name__ == "__main__":
-    crd = Credential('Microsoft-RPA')
+    crd = Credential('API_ZENDESK')
     
     print(crd.load())
     
