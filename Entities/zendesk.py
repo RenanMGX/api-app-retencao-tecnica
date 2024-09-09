@@ -49,51 +49,80 @@ class APIZendesk:
         self.__user:str = user
         self.__password:str = password
         
-    def get(self, ticket:str) -> dict:
+    def get(self, ticket: str) -> dict:
+        """
+        Busca informações de um ticket específico na API do Zendesk.
+
+        :param ticket: O ID do ticket a ser buscado.
+        :return: Um dicionário contendo o status da resposta, a razão e o conteúdo da resposta.
+        """
+        # Constrói a URL para a requisição do ticket específico
         url = os.path.join(self.url, f"api/v2/tickets/{ticket}")
         
+        # Define os cabeçalhos da requisição, incluindo a autorização e o tipo de conteúdo
         headersList = {
-        "Authorization": f"Basic {self.token}",
-        "Content-Type": "application/json"
+            "Authorization": f"Basic {self.token}",
+            "Content-Type": "application/json"
         }
-
+        
+        # Payload vazio, pois a requisição GET não necessita de um corpo
         payload = ""
-
-        response = requests.request("GET", url, data=payload,  headers=headersList)
+        
+        # Faz a requisição GET para a API do Zendesk
+        response = requests.request("GET", url, data=payload, headers=headersList)
         
         try:
+            # Tenta converter a resposta para JSON
             _response = response.json()
         except:
+            # Se a conversão falhar, retorna um dicionário vazio
             _response = {}
-
-        return {"status_code": response.status_code, "reason": response.reason, 'response': _response}
         
-    def attachment(self, file_path:str) -> str:
+        # Retorna um dicionário com o status da resposta, a razão e o conteúdo da resposta
+        return {"status_code": response.status_code, "reason": response.reason, 'response': _response}    
+    
+        
+    def attachment(self, file_path: str) -> str:
+        """
+        Faz o upload de um arquivo para o Zendesk e retorna o token do upload.
+
+        :param file_path: O caminho do arquivo a ser enviado.
+        :return: O token do upload se bem-sucedido, caso contrário, uma string vazia.
+        """
         try:
+            # Verifica se o arquivo existe no caminho especificado
             if not os.path.exists(file_path):
                 print(f"arquivo '{file_path}' não foi encontrado")
                 return ""
                 raise FileNotFoundError(f"arquivo '{file_path}' não foi encontrado")
 
+            # Constrói a URL para a requisição de upload
             reqUrl = f"https://patrimar.zendesk.com/api/v2/uploads?filename={os.path.basename(file_path)}"
 
+            # Define os cabeçalhos da requisição, incluindo a autorização e o tipo de conteúdo
             headersList = {
-            "Authorization": f"Basic {self.token}",
-            "Content-Type": "application/octet-stream" 
+                "Authorization": f"Basic {self.token}",
+                "Content-Type": "application/octet-stream"
             }
 
+            # Lê o conteúdo do arquivo em binário
             payload = open(file_path, 'rb').read()
 
-            response = requests.request("POST", reqUrl, data=payload,  headers=headersList)
+            # Faz a requisição POST para a API do Zendesk
+            response = requests.request("POST", reqUrl, data=payload, headers=headersList)
 
             try:
+                # Tenta extrair o token do upload da resposta JSON
                 return response.json().get('upload').get('token')
             except Exception as error:
+                # Em caso de erro, imprime o tipo e a mensagem do erro
                 print(type(error), error)
                 return ""
         except Exception as error:
+            # Em caso de erro, imprime o tipo e a mensagem do erro
             print(type(error), error)
-            return ""
+            return ""        
+        
         
     def add(self, *, 
             marca:Literal["administrativo", "juridico"],

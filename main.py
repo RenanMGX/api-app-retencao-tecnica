@@ -29,65 +29,134 @@ class Execute:
         )
     
     def start(self):
+        """
+        Método principal que inicia a execução das etapas de criação e consulta de chamados.
+        """
+        # Inicia a criação de chamados na etapa 1
         self.criar_chamado_etapa_1()
-        self.consultar_chamado_etapa_2()
-        print(P("Finalizando Script", color='white'))
         
+        # Inicia a consulta de chamados na etapa 2
+        self.consultar_chamado_etapa_2()
+        
+        # Imprime mensagem de finalização do script
+        print(P("Finalizando Script", color='white'))
+            
     def criar_chamado_etapa_1(self):
+        """
+        Método para criar chamados no Zendesk a partir de solicitações listadas no SharePoint.
+        
+        Este método consulta o SharePoint para obter solicitações com anexos, filtra as que ainda não possuem um número de chamado no Zendesk,
+        e então cria um chamado no Zendesk para cada solicitação filtrada. Se a criação do chamado for bem-sucedida, o número do chamado é atualizado
+        no SharePoint. Em caso de erro, o erro é registrado nos logs.
+
+        Returns:
+            None
+        """
+        # Imprime uma mensagem indicando que a listagem de solicitações para abrir chamados está em andamento
         print(P("listando solicitação para abrir chamado"))
+        
+        # Consulta o SharePoint para obter dados com anexos
         self.__sharePoint.consultar(with_attachment=True)
+        
+        # Obtém o DataFrame com os dados do SharePoint
         df = self.__sharePoint.df
+        
         try:
+            # Filtra as linhas que não possuem um número de chamado no Zendesk
             df = df[~df['NumChamadoZendesk'].notnull()]
         except KeyError:
+            # Se a coluna 'NumChamadoZendesk' não existir, ignora o erro
             pass
+        
+        # Verifica se o DataFrame está vazio após a filtragem
         if df.empty:
+            # Imprime uma mensagem indicando que não há chamados para criar
             print(P("Nenhum chamado para Criar", color='cyan'))
             return
         
+        # Itera sobre as linhas do DataFrame
         for row, value in df.iterrows():
+            # Cria a descrição do chamado
             descri = f"""
             teste chamado do TI para aplicativo de retenção tecnica\n
             CNPJ: {value['CnpjFormatado']}\n
             Nome Empreiteiro: {value['NomeEmpreiteiro']}\n
             """
-            response:dict = self.__zendesk.add(marca='juridico', titulo='TESTE TI', descri=descri, attachment_path=value['Attachment_Path'])
+            
+            # Cria um chamado no Zendesk
+            response: dict = self.__zendesk.add(marca='juridico', titulo='TESTE TI', descri=descri, attachment_path=value['Attachment_Path'])
+            
+            # Verifica se o chamado foi criado com sucesso
             if response.get('status_code') == 201:
-                ticket:str = response.get('response').get('ticket').get('id') #type: ignore
-                print(f"numero do chamado: {ticket}") ######
+                # Obtém o ID do chamado criado
+                ticket: str = response.get('response').get('ticket').get('id')  # type: ignore
+                
+                # Atualiza o número do chamado no SharePoint
                 self.__sharePoint.alterar(int(value['Id']), coluna='NumChamadoZendesk', valor=str(ticket))
-        
+                
+                # Imprime uma mensagem indicando que o chamado foi criado com sucesso
+                print(P(f"chamado criado no zendesk {ticket}", color='green'))
+            else:
+                # Imprime uma mensagem de erro se a criação do chamado falhar
+                print(P("error ao abrir um chamado: ", color='red'))
+                print(P(response))
+                
+                # Registra o erro nos logs
+                Logs().register(status='Error', description="erro ao abrir um chamado", exception=str(response))
+                    
     def consultar_chamado_etapa_2(self):
+        """
+        Consulta os chamados no SharePoint e verifica o status no Zendesk.
+        Atualiza o status de aprovação no SharePoint com base na resposta do Zendesk.
+        """
         print(P("listando solicitação para consultar retorno do Juridico"))
+        
+        # Consulta os dados no SharePoint
         self.__sharePoint.consultar()
         df = self.__sharePoint.df
+        
         try:
+            # Filtra os dados para incluir apenas aqueles com número de chamado no Zendesk
             df = df[df['NumChamadoZendesk'].notnull()]
         except KeyError:
             pass
+        
         if df.empty:
             print(P("nenhum chamado para consultar no Juridico", color='cyan'))
             return
         
+        # Itera sobre cada linha do DataFrame
         for row, value in df.iterrows():
-            print(P(f"verificando chamado '{value['NumChamadoZendesk']}' da solicitaçao no app '{value['Id']}'"))
-            response = self.__zendesk.get(str(value['NumChamadoZendesk']))
+            print(P(f"verificando chamado '{value['NumChamadoZendesk']}' da solicitaçao no app '{value['Id']}'", color='yellow'))
+            
+            # Consulta o status do chamado no Zendesk
+            response: dict = self.__zendesk.get(str(value['NumChamadoZendesk']))
+            
             if response.get('status_code') == 200:
+                ticket: dict = response.get('response').get('ticket')  # type: ignore
+                status = ticket.get('status')
                 
-                fields = {x['id']:x['value'] for x in response.get('response').get('ticket').get('fields')} #type: ignore
-                custom_fields = {x['id']:x['value'] for x in response.get('response').get('ticket').get('custom_fields')}#type: ignore 
+                # Verifica se o chamado está resolvido ou fechado
+                if (status != "solved") and (status != "closed"):
+                    print(P("o chamado ainda não está fechado!", color='yellow'))
+                    continue
                 
-                if (fields.get(25245062103831) == "sim_pend_consultivo") and (custom_fields.get(25245062103831)  == "sim_pend_consultivo"):
+                # Obtém os campos personalizados do ticket
+                fields = {x['id']: x['value'] for x in ticket.get('fields')}  # type: ignore
+                custom_fields = {x['id']: x['value'] for x in ticket.get('custom_fields')}  # type: ignore
+                
+                # Atualiza o status de aprovação no SharePoint com base nos campos personalizados
+                if (fields.get(25245062103831) == "sim_pend_consultivo") and (custom_fields.get(25245062103831) == "sim_pend_consultivo"):
                     self.__sharePoint.alterar(int(value['Id']), coluna='AprovacaoJuridico', valor='Aprovado')
                     print(P("a solicitação foi aceita", color='green'))
-                elif (fields.get(25245062103831) == "não_pend_consultivo") and (custom_fields.get(25245062103831)  == "não_pend_consultivo"):
+                elif (fields.get(25245062103831) == "não_pend_consultivo") and (custom_fields.get(25245062103831) == "não_pend_consultivo"):
                     self.__sharePoint.alterar(int(value['Id']), coluna='AprovacaoJuridico', valor='Rejeitado')
                     print(P("a solicitação foi Rejeitada", color='red'))
                 else:
                     print(P("ainda sem resposta", color='yellow'))
                     continue
-                
-            print(P("Verificação de chamado encerrada"))
+            
+            print(P("Verificação de chamado encerrada"))            
         
     def test(self):
         self.__sharePoint.alterar(304, coluna='NumChamadoZendesk', valor="52308")
@@ -100,6 +169,9 @@ if __name__ == "__main__":
     }
     
     def informativo():
+        """
+        Função que imprime os argumentos válidos para a execução do script.
+        """
         print("informe apenas os argumentos validos:")
         for arg in list(valid_argvs.keys()):
             print(P(arg))
@@ -109,6 +181,7 @@ if __name__ == "__main__":
         if argv[1] in valid_argvs:
             print(P("Iniciando Automação", color='blue'))
             try:
+                # Executa a função correspondente ao argumento fornecid
                 valid_argvs[argv[1]]() # type: ignore
                 Logs().register(status='Concluido', description="automação executou com exito!", csv_register=False)
             except Exception as error:
