@@ -7,8 +7,9 @@ from typing import Literal, Dict, List, LiteralString
 
 import requests
 from Entities.dependencies.credenciais import Credential
+from Entities.exceptions import CredentialNotFound
 
-class API:
+class APIZendesk:
     @property
     def url(self) -> str:
         return "https://patrimar.zendesk.com/"
@@ -26,14 +27,27 @@ class API:
             "administrativo": {
                 "group_id": 26071794815383,
                 "brand_id": 25317468115479,
+            },
+            "juridico": {
+                "group_id": 11065757529239,
+                "brand_id": 11062040706839,
+            },
+        }
+    
+    @property
+    def usuario_criador(self) -> Dict[str, dict]:
+        return {
+            "rpa_user": {
+                "requester_id": 26079230247703, #id do RPA
+                "submitter_id": 26079230247703  #id do RPA
             }
         }
-        
 
-    def __init__(self) -> None:
-        crd:dict = Credential('API_ZENDESK').load()
-        self.__user:str|None = crd.get('user')
-        self.__password:str|None = crd.get('password')
+    def __init__(self, user:str|None, password:str|None) -> None:
+        if not ((user) and (password)):
+            raise CredentialNotFound("não foi possivel identificar as credenciais")
+        self.__user:str = user
+        self.__password:str = password
         
     def get(self, ticket:str) -> dict:
         url = os.path.join(self.url, f"api/v2/tickets/{ticket}")
@@ -82,12 +96,14 @@ class API:
             return ""
         
     def add(self, *, 
-            marca:Literal["administrativo"],
+            marca:Literal["administrativo", "juridico"],
             titulo:str,
             descri:str,
             ticket_form_id:int|None=None,
+            fields:List[Dict[Literal["id", "value"],int|str]]=[],
             custom_fields:List[Dict[Literal["id", "value"],int|str]]=[],
-            attachment_path:str=""
+            attachment_path:List[str] = [],
+            criador_chamado:Literal['rpa_user'] = "rpa_user"
             ) -> dict:
         url = os.path.join(self.url, f"api/v2/tickets")
 
@@ -100,8 +116,8 @@ class API:
             "ticket":{}
         }
         
-        data["ticket"]["requester_id"] = 26079230247703 #id do RPA
-        data["ticket"]["submitter_id"] = 26079230247703 #id do RPA
+        data["ticket"]["requester_id"] = self.usuario_criador[criador_chamado]['requester_id']
+        data["ticket"]["submitter_id"] = self.usuario_criador[criador_chamado]['submitter_id']
         
         data["ticket"]["group_id"] = self.marca[marca]['group_id']
         data["ticket"]["brand_id"] = self.marca[marca]['brand_id']
@@ -112,12 +128,15 @@ class API:
             data["ticket"]["ticket_form_id"] = ticket_form_id
         if custom_fields:
             data["ticket"]["custom_fields"] = custom_fields
+        if fields:
+            data["ticket"]["fields"] = fields
         
-        if (attachment_token:=self.attachment(attachment_path)):
-            data["ticket"]["comment"] =  {
-                #"body": "\n\n testando anexo 0013 \n\n\n",
-                "uploads": attachment_token
-            }
+        if attachment_path:
+            if (attachment_token:=self.attachment(attachment_path[0])):
+                data["ticket"]["comment"] =  {
+                    #"body": "\n\n testando anexo 0013 \n\n\n",
+                    "uploads": attachment_token
+                }
 
         payload = json.dumps(data)
         
@@ -132,6 +151,9 @@ class API:
     
     def delete(self, ticket:str|int) -> dict:
         url = os.path.join(self.url, f"api/v2/tickets/{ticket}")
+        
+        if input(f"Tem certeza que quer excluir o ticket '{ticket}' [s/n]: ").lower() != 's':
+            return {'status_code': 404, 'reason': "não respondeu para continuar a exclusão do script"}
 
         headersList = {
         "Authorization": f"Basic {self.token}",

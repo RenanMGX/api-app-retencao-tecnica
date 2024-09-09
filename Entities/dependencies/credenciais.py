@@ -127,6 +127,7 @@ if __name__ == "__main__":
         encode_phrase:str = base64.b64encode(phrase).decode()
         return encode_phrase
     
+    print(crd)
     print(token(crd['user'],crd['password']))
     print(token("rpa@patrimar.com.br",crd['password']))
     

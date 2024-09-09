@@ -58,7 +58,7 @@ class Logs:
             print(error)
                     
         
-    def register(self, *, status:Literal['Error', 'Concluido', 'Report', 'Test'], description:str="", exception:str|None=traceback.format_exc(), file:str="Logs_Operation.csv", date_format:str='%d/%m/%Y %H:%M:%S'):
+    def register(self, *, status:Literal['Error', 'Concluido', 'Report', 'Test'], description:str="", exception:str|None=traceback.format_exc(), file:str="Logs_Operation.csv", date_format:str='%d/%m/%Y %H:%M:%S', csv_register:bool=True):
         if not file.endswith('.csv'):
             file += '.csv'
         
@@ -88,11 +88,14 @@ class Logs:
         
         for _ in range(2):
             try:
-                with open(file_path, 'a', encoding='utf-8', newline='') as _file:
-                    csv_writer = csv.writer(_file, delimiter=';')
-                    if not exist:
-                        csv_writer.writerow(["Date", "Name", "Status", "Description", "Exception"])
-                    csv_writer.writerow([datetime.now().strftime(date_format), self.name, status, description, exception])
+                if csv_register:
+                    with open(file_path, 'a', encoding='utf-8', newline='') as _file:
+                        csv_writer = csv.writer(_file, delimiter=';')
+                        if not exist:
+                            csv_writer.writerow(["Date", "Name", "Status", "Description", "Exception"])
+                        csv_writer.writerow([datetime.now().strftime(date_format), self.name, status, description, exception])
+                        return
+                else:
                     return
             except PermissionError:
                 #pass

@@ -173,7 +173,7 @@ class SiteAppReten():
         else:
             raise FileNotFoundError(f"o caminho '{path}' não foi encontrado")
     
-class APIAppReten:
+class APISharePoint:
     @property
     def df(self) -> pd.DataFrame:
         try:
@@ -190,8 +190,8 @@ class APIAppReten:
         return download_path
     
     def __init__(self, *, url:str, lista:str, email:str|None, password:str|None) -> None:
-        if (email is None) or (password is None):
-            raise ValueError("o email ou a senha não pode estar vazio")
+        if not ((email) and (password)):
+            raise exceptions.CredentialNotFound("não foi possivel identificar as credenciais")
         
         self.__ctx_auth = AuthenticationContext(url)
         if self.__ctx_auth.acquire_token_for_user(email, password):
@@ -216,6 +216,8 @@ class APIAppReten:
             if not item.properties.get('AprovacaoJuridico'):
                 if with_attachment:
                     path_attachment_download = []
+                    if item.properties['NumChamadoZendesk']:
+                        continue
                     if item.properties['Attachments']:
                         attachment_files = item.attachment_files
                         self.__ctx.load(attachment_files)
@@ -252,10 +254,12 @@ class APIAppReten:
     def limpar_pasta_download(self) -> None:
         for file in os.listdir(self.download_path):
             file:str = os.path.join(self.download_path, file)
+            
             if os.path.isfile(file):
                 try:
                     os.unlink(file)
-                except PermissionError:
+                except PermissionError as error:
+                    print(error)
                     Functions.fechar_excel(file)
                     os.unlink(file)    
             
