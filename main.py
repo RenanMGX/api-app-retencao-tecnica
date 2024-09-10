@@ -6,11 +6,22 @@ import sys
 from Entities.dependencies.logs import Logs
 import traceback
 from Entities.zendesk import APIZendesk
+from datetime import datetime
 
 def test():
     print("testado")
 
 class Execute:
+    @property
+    def tratamento_inicial(self) -> str:
+        hora = datetime.now().hour
+        if (hora > 6) and (hora < 12):
+            return "Bom dia"
+        elif (hora > 12) and (hora < 18):
+            return "Boa tarde"
+        else:
+            return "Boa noite"    
+        
     def __init__(self) -> None:
         #sharepoint
         crd_sharepoint:dict = Credential('Microsoft-RPA').load()
@@ -77,14 +88,49 @@ class Execute:
         # Itera sobre as linhas do DataFrame
         for row, value in df.iterrows():
             # Cria a descrição do chamado
+            
             descri = f"""
-            teste chamado do TI para aplicativo de retenção tecnica\n
-            CNPJ: {value['CnpjFormatado']}\n
-            Nome Empreiteiro: {value['NomeEmpreiteiro']}\n
+            TESTE DO TI <-----------------------------------\n
+            {self.tratamento_inicial}.\n
+            Gentileza verificar se o Empreiteiro indicado abaixo e se anexo possuí ações judiciais que o impeçam de receber seu saldo de retenção técnica.\n
+            CNPJ: {value['CnpjFormatado']}\n 
+            EMPREITEIRO: {value['NomeEmpreiteiro']}\n
+            \n
+            \n
+            este chamado foi criado automaticamente por um Robô"
             """
             
             # Cria um chamado no Zendesk
-            response: dict = self.__zendesk.add(marca='juridico', titulo='TESTE TI', descri=descri, attachment_path=value['Attachment_Path'])
+            response: dict = self.__zendesk.add(
+                marca='juridico',
+                titulo=f"TESTE DO TI - Liberação de Retenção - EMPREITEIRO {value['NomeEmpreiteiro']}",#CORRIGIR <---------------------------
+                descri=descri,
+                ticket_form_id=11062047187479,
+                tags=[
+                    "controle_obras_255",
+                    "parecer_jurídico" 
+                    ],
+                fields=[
+                    {
+                        'id':11062650498327,
+                        'value':"controle_obras_255"
+                    },
+                    {
+                        'id':11062458183319,
+                        'value':"parecer_jurídico"
+                    },
+                    {
+                        'id':11062562491159,
+                        'value':f"{value['CodigoEmpreendimento']} - {value['NomeEmpreendimento']}"
+                    },
+                    {
+                        'id':11062574075671,
+                        'value':True
+                    }
+                    
+                ],
+                attachment_path=value['Attachment_Path']
+            )
             
             # Verifica se o chamado foi criado com sucesso
             if response.get('status_code') == 201:
@@ -133,6 +179,7 @@ class Execute:
             response: dict = self.__zendesk.get(str(value['NumChamadoZendesk']))
             
             if response.get('status_code') == 200:
+                
                 ticket: dict = response.get('response').get('ticket')  # type: ignore
                 status = ticket.get('status')
                 
@@ -141,20 +188,47 @@ class Execute:
                     print(P("o chamado ainda não está fechado!", color='yellow'))
                     continue
                 
+                
                 # Obtém os campos personalizados do ticket
                 fields = {x['id']: x['value'] for x in ticket.get('fields')}  # type: ignore
                 custom_fields = {x['id']: x['value'] for x in ticket.get('custom_fields')}  # type: ignore
                 
+                
                 # Atualiza o status de aprovação no SharePoint com base nos campos personalizados
                 if (fields.get(25245062103831) == "sim_pend_consultivo") and (custom_fields.get(25245062103831) == "sim_pend_consultivo"):
-                    self.__sharePoint.alterar(int(value['Id']), coluna='AprovacaoJuridico', valor='Aprovado')
-                    print(P("a solicitação foi aceita", color='green'))
+                    self.__sharePoint.alterar(int(value['Id']), coluna='AprovacaoJuridico', valor='Recusado')
+                    print(P("existe pendencias", color='red'))
                 elif (fields.get(25245062103831) == "não_pend_consultivo") and (custom_fields.get(25245062103831) == "não_pend_consultivo"):
-                    self.__sharePoint.alterar(int(value['Id']), coluna='AprovacaoJuridico', valor='Rejeitado')
-                    print(P("a solicitação foi Rejeitada", color='red'))
+                    self.__sharePoint.alterar(int(value['Id']), coluna='AprovacaoJuridico', valor='Aprovado')
+                    
+                    print(P("não existe pendencias", color='green'))
                 else:
                     print(P("ainda sem resposta", color='yellow'))
                     continue
+                
+                comments = self.__zendesk.get(str(value['NumChamadoZendesk']), type='comments').get('response').get('comments')#type: ignore
+                if len(comments) > 1:
+                    comments = comments[-1].get('body')# type: ignore
+                else:
+                    comments = "Sem Comentario"
+                    
+                    
+                dateSTR = datetime.fromisoformat(ticket.get('updated_at')).strftime('%m/%d/%Y %H:%M')# type: ignore
+                if not dateSTR:
+                    dateSTR = ""
+                    
+                user = self.__zendesk.get(str(ticket.get('assignee_id')), type='user').get('response').get('user').get('name') #type: ignore
+                if not user:
+                    user = "Não Identificado"
+                
+                self.__sharePoint.alterar(int(value['Id']), coluna='ResponsavelJuridico', valor=user)
+                self.__sharePoint.alterar(int(value['Id']), coluna='ComentarioJuridico', valor=comments)
+                self.__sharePoint.alterar(int(value['Id']), coluna='ConclusaoJuridico', valor=dateSTR)
+                
+            
+            else:
+                print(P('não foi encontrada', color='red'))
+            
             
             print(P("Verificação de chamado encerrada"))            
         

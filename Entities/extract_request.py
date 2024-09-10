@@ -239,7 +239,7 @@ class APISharePoint:
         return self
         
         
-    def alterar(self, id, *, valor:str|Literal['', 'Aprovado', 'Rejeitado'], coluna:Literal['', 'AprovacaoJuridico', 'NumChamadoZendesk']) -> None:
+    def alterar(self, id, *, valor:Literal['', 'Aprovado', 'Recusado']|str, coluna:Literal['', 'AprovacaoJuridico', 'NumChamadoZendesk', 'ComentarioJuridico', 'ConclusaoJuridico','ResponsavelJuridico']) -> None:
         item_to_update = self.__lista.get_item_by_id(id)
         # Atualizando os campos do item
         item_to_update.set_property(coluna, valor)

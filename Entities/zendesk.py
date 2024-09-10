@@ -49,7 +49,7 @@ class APIZendesk:
         self.__user:str = user
         self.__password:str = password
         
-    def get(self, ticket: str) -> dict:
+    def get(self, id: str, *, type:Literal['tickets', 'comments', 'user']='tickets') -> dict:
         """
         Busca informações de um ticket específico na API do Zendesk.
 
@@ -57,8 +57,15 @@ class APIZendesk:
         :return: Um dicionário contendo o status da resposta, a razão e o conteúdo da resposta.
         """
         # Constrói a URL para a requisição do ticket específico
-        url = os.path.join(self.url, f"api/v2/tickets/{ticket}")
-        
+        url:str
+        if type == 'tickets':
+            url = os.path.join(self.url, f"api/v2/tickets/{id}")
+        elif type == 'comments':
+            url = os.path.join(self.url, f"api/v2/tickets/{id}/comments")
+        elif type == 'user':
+            url = os.path.join(self.url, f"api/v2/users/{id}")
+            
+                    
         # Define os cabeçalhos da requisição, incluindo a autorização e o tipo de conteúdo
         headersList = {
             "Authorization": f"Basic {self.token}",
@@ -130,8 +137,9 @@ class APIZendesk:
             descri:str,
             ticket_form_id:int|None=None,
             fields:List[Dict[Literal["id", "value"],int|str]]=[],
-            custom_fields:List[Dict[Literal["id", "value"],int|str]]=[],
-            attachment_path:List[str] = [],
+            #custom_fields:List[Dict[Literal["id", "value"],int|str]]=[],
+            tags:List[str] = [],
+            attachment_path:List[str] = [], 
             criador_chamado:Literal['rpa_user'] = "rpa_user"
             ) -> dict:
         url = os.path.join(self.url, f"api/v2/tickets")
@@ -155,10 +163,12 @@ class APIZendesk:
         data["ticket"]["description"] = descri
         if ticket_form_id:
             data["ticket"]["ticket_form_id"] = ticket_form_id
-        if custom_fields:
-            data["ticket"]["custom_fields"] = custom_fields
+        if fields:
+            data["ticket"]["custom_fields"] = fields
         if fields:
             data["ticket"]["fields"] = fields
+        if tags:
+            data["ticket"]["tags"] = tags
         
         if attachment_path:
             if (attachment_token:=self.attachment(attachment_path[0])):
