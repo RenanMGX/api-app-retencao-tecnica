@@ -213,7 +213,7 @@ class Execute:
                     comments = "Sem Comentario"
                     
                     
-                dateSTR = datetime.fromisoformat(ticket.get('updated_at')).strftime('%m/%d/%Y %H:%M')# type: ignore
+                dateSTR = datetime.fromisoformat(ticket.get('updated_at')).strftime('%m/%d/%Y')# type: ignore
                 if not dateSTR:
                     dateSTR = ""
                     
