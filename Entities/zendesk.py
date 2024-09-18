@@ -1,12 +1,9 @@
 
 import base64
 import os
-import pdb
 import json
-from typing import Literal, Dict, List, LiteralString
-
+from typing import Literal, Dict, List
 import requests
-from Entities.dependencies.credenciais import Credential
 from Entities.exceptions import CredentialNotFound
 
 class APIZendesk:

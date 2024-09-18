@@ -1,7 +1,4 @@
-from genericpath import isfile
-from imghdr import what
 import os
-import pdb
 from typing import Literal
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -18,9 +15,6 @@ import pandas as pd
 
 from office365.runtime.auth.authentication_context import AuthenticationContext
 from office365.sharepoint.client_context import ClientContext
-
-from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.remote.webdriver import WebDriver
 
         
 class SiteAppReten():

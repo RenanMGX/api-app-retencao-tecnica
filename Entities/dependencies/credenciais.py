@@ -1,11 +1,9 @@
 import json
 import os
 from copy import deepcopy
-import traceback
 from random import randint
 from getpass import getuser
 from typing import Literal, Dict
-import asyncio
 
 class Credential:
     def __init__(self, name_file:Literal["Microsoft-RPA", "API_ZENDESK"], path:str=f"C:\\Users\\{getuser()}\\PATRIMAR ENGENHARIA S A\\RPA - Documentos\\RPA - Dados\\CRD\\.patrimar_rpa\\credenciais\\") -> None:

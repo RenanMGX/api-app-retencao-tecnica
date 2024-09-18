@@ -5,7 +5,6 @@ from datetime import datetime
 import re
 from .functions import Functions
 import traceback
-import asyncio
 import requests
 import json
 from getpass import getuser
