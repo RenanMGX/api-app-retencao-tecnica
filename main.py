@@ -88,22 +88,20 @@ class Execute:
         # Itera sobre as linhas do DataFrame
         for row, value in df.iterrows():
             # Cria a descrição do chamado
-            
             descri = f"""
-            TESTE DO TI <-----------------------------------\n
             {self.tratamento_inicial}.\n
             Gentileza verificar se o Empreiteiro indicado abaixo e se anexo possuí ações judiciais que o impeçam de receber seu saldo de retenção técnica.\n
             CNPJ: {value['CnpjFormatado']}\n 
             EMPREITEIRO: {value['NomeEmpreiteiro']}\n
             \n
             \n
-            este chamado foi criado automaticamente por um Robô"
+            este chamado foi aberto automaticamente por nosso sistema robótico.
             """
             
             # Cria um chamado no Zendesk
             response: dict = self.__zendesk.add(
                 marca='juridico',
-                titulo=f"TESTE DO TI - Liberação de Retenção - EMPREITEIRO {value['NomeEmpreiteiro']}",#CORRIGIR <---------------------------
+                titulo=f"Liberação de Retenção - EMPREITEIRO {value['NomeEmpreiteiro']}",
                 descri=descri,
                 ticket_form_id=11062047187479,
                 tags=[
