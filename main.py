@@ -7,6 +7,7 @@ from Entities.dependencies.logs import Logs
 import traceback
 from Entities.zendesk import APIZendesk
 from datetime import datetime
+from time import sleep
 
 def test():
     print("testado")
@@ -43,13 +44,15 @@ class Execute:
         """
         Método principal que inicia a execução das etapas de criação e consulta de chamados.
         """
-        # Inicia a criação de chamados na etapa 1
-        self.criar_chamado_etapa_1()
-        
-        # Inicia a consulta de chamados na etapa 2
-        self.consultar_chamado_etapa_2()
-        
-        # Imprime mensagem de finalização do script
+        while True:
+            # Inicia a criação de chamados na etapa 1
+            self.criar_chamado_etapa_1()
+            
+            # Inicia a consulta de chamados na etapa 2
+            self.consultar_chamado_etapa_2()
+            
+            # Imprime mensagem de finalização do script
+            sleep(15*60)
         print(P("Finalizando Script", color='white'))
             
     def criar_chamado_etapa_1(self):
@@ -89,6 +92,7 @@ class Execute:
         for row, value in df.iterrows():
             # Cria a descrição do chamado
             descri = f"""
+            TESTE DO TI\n
             {self.tratamento_inicial}.\n
             Gentileza verificar se o Empreiteiro indicado abaixo e se anexo possuí ações judiciais que o impeçam de receber seu saldo de retenção técnica.\n
             CNPJ: {value['CnpjFormatado']}\n 
@@ -101,7 +105,7 @@ class Execute:
             # Cria um chamado no Zendesk
             response: dict = self.__zendesk.add(
                 marca='juridico',
-                titulo=f"Liberação de Retenção - EMPREITEIRO {value['NomeEmpreiteiro']}",
+                titulo=f"TESTE DO TI -Liberação de Retenção - EMPREITEIRO {value['NomeEmpreiteiro']}",
                 descri=descri,
                 ticket_form_id=11062047187479,
                 tags=[
