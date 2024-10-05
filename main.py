@@ -1,13 +1,17 @@
-from typing import Dict
+from typing import Dict, List
 from Entities.dependencies.credenciais import Credential
 from Entities.dependencies.functions import P
-from Entities.extract_request import APISharePoint
+from Entities.extract_request import APISharePoint, pd
 import sys
 from Entities.dependencies.logs import Logs
 import traceback
 from Entities.zendesk import APIZendesk
 from datetime import datetime
 from time import sleep
+from PyPDF2 import PdfMerger
+import os
+import numpy as nb
+
 
 def test():
     print("testado")
@@ -92,7 +96,6 @@ class Execute:
         for row, value in df.iterrows():
             # Cria a descrição do chamado
             descri = f"""
-            TESTE DO TI\n
             {self.tratamento_inicial}.\n
             Gentileza verificar se o Empreiteiro indicado abaixo e se anexo possuí ações judiciais que o impeçam de receber seu saldo de retenção técnica.\n
             CNPJ: {value['CnpjFormatado']}\n 
@@ -105,7 +108,7 @@ class Execute:
             # Cria um chamado no Zendesk
             response: dict = self.__zendesk.add(
                 marca='juridico',
-                titulo=f"TESTE DO TI -Liberação de Retenção - EMPREITEIRO {value['NomeEmpreiteiro']}",
+                titulo=f"Liberação de Retenção - EMPREITEIRO {value['NomeEmpreiteiro']}",
                 descri=descri,
                 ticket_form_id=11062047187479,
                 tags=[
@@ -234,8 +237,48 @@ class Execute:
             
             print(P("Verificação de chamado encerrada"))            
         
+    def coletar_arquivos_controle_etapa_3(self, target_path:str=r'C:\Users\renan.oliveira\Downloads\y'):
+        if not os.path.exists(target_path):
+            Logs().register(status='Error', description=f"o caminho '{target_path}' não foi encontrado")
+            return
+        
+        # Consulta os dados no SharePoint
+        df:pd.DataFrame = self.__sharePoint.coletar_arquivos_controle().df
+        
+        if df.empty:
+            print(P("sem arquivo do controle para enviar"))
+            return
+        
+        for row, value in df.iterrows():
+            if not value['Attachment_Path'] is nb.nan:
+                # List of PDF files to merge
+                pdf_files:List[str] = value['Attachment_Path']
+                
+                # Create a PdfMerger object
+                merger = PdfMerger()
+
+                # Loop through the list and append each PDF to the merger object
+                for pdf_file in pdf_files:
+                    if pdf_file.endswith('.pdf'):
+                        merger.append(pdf_file)
+                    else:
+                        Logs().register(status='Error', description=f"o arquivo {pdf_file} não é um pdf")     
+
+                # Write out the merged PDF
+                if merger.id_count > 0:
+                    merger.write(os.path.join(target_path, f"{value['Id']}-RetençãoTécnica_{value['CodigoBP']}_{value['CodigoEmpreendimento']}.pdf"))
+                    # Atualiza o número do chamado no SharePoint
+                    self.__sharePoint.alterar(int(value['Id']), coluna='RegistroArquivoControle', valor="Copiado")
+                else:
+                    Logs().register(status='Error', description="a coluna de anexo esta vazia1") 
+                merger.close()
+            else:    
+                Logs().register(status='Error', description="a coluna de anexo esta vazia2")     
+        
+        
     def test(self):
-        self.__sharePoint.alterar(304, coluna='NumChamadoZendesk', valor="52308")
+        self.coletar_arquivos_controle_etapa_3()
+        #self.__sharePoint.alterar(304, coluna='NumChamadoZendesk', valor="52308")
 
 if __name__ == "__main__":
     execute = Execute()
@@ -270,3 +313,4 @@ if __name__ == "__main__":
             informativo()
     else:
         informativo()
+        

@@ -217,9 +217,9 @@ class APISharePoint:
                         self.__ctx.load(attachment_files)
                         self.__ctx.execute_query()
                         for attachment_file in attachment_files:
-                            path_attachment_download.append(os.path.join(self.download_path, attachment_file.properties['FileName']))
-                        for attachment_download in path_attachment_download:
-                            with open(attachment_download, 'wb')as _file_handle:
+                            file_name = os.path.join(self.download_path, f"{item.properties.get('ID')}-{attachment_file.properties['FileName']}")
+                            path_attachment_download.append(file_name)
+                            with open(file_name, 'wb')as _file_handle:
                                 attachment_file.download(_file_handle)
                                 self.__ctx.execute_query()
                             
@@ -231,9 +231,41 @@ class APISharePoint:
         self.__df = pd.DataFrame(list_valid)
             
         return self
+    
+    def coletar_arquivos_controle(self):
+        items = self.__lista.get_items()
+        self.__ctx.load(items)
+        self.__ctx.execute_query()
         
+        self.limpar_pasta_download()
+                
+        list_valid = []
+        for item in items:
+            if item.properties.get('RegistroArquivoControle'):
+                continue            
+            if "Aprovado" in str(item.properties.get('AprovacaoControle')):
+                path_attachment_download = []
+                if item.properties['Attachments']:
+                    attachment_files = item.attachment_files
+                    self.__ctx.load(attachment_files)
+                    self.__ctx.execute_query()
+                    for attachment_file in attachment_files:
+                        file_name = os.path.join(self.download_path, f"{item.properties.get('ID')}-{attachment_file.properties['FileName']}")
+                        path_attachment_download.append(file_name)
+                        with open(file_name, 'wb')as _file_handle:
+                            attachment_file.download(_file_handle)
+                            self.__ctx.execute_query()
+                                    
+                item.properties['Attachment_Path'] = path_attachment_download
+                                        
+                list_valid.append(item.properties)
+                                
+        self.__df = pd.DataFrame(list_valid)    
         
-    def alterar(self, id, *, valor:Literal['', 'Aprovado', 'Recusado']|str, coluna:Literal['', 'AprovacaoJuridico', 'NumChamadoZendesk', 'ComentarioJuridico', 'ConclusaoJuridico','ResponsavelJuridico']) -> None:
+        return self
+        
+            
+    def alterar(self, id, *, valor:Literal['', 'Aprovado', 'Recusado']|str, coluna:Literal['', 'AprovacaoJuridico', 'NumChamadoZendesk', 'ComentarioJuridico', 'ConclusaoJuridico','ResponsavelJuridico', 'RegistroArquivoControle']) -> None:
         item_to_update = self.__lista.get_item_by_id(id)
         # Atualizando os campos do item
         item_to_update.set_property(coluna, valor)

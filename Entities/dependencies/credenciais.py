@@ -115,17 +115,7 @@ class Credential:
         return self.criar_cifra(text, -key)
         
 if __name__ == "__main__":
-    crd = Credential('API_ZENDESK')
+    crd = Credential('Microsoft-RPA')
     
-    import base64
-    crd = crd.load()
-    
-    def token(user, password) -> str:
-        phrase:bytes = f"{user}/token:{password}".encode("utf-8")
-        encode_phrase:str = base64.b64encode(phrase).decode()
-        return encode_phrase
-    
-    print(crd)
-    print(token(crd['user'],crd['password']))
-    print(token("rpa@patrimar.com.br",crd['password']))
+    print(crd.load())
     
