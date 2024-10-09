@@ -1,3 +1,4 @@
+from getpass import getuser
 from typing import Dict, List
 from Entities.dependencies.credenciais import Credential
 from Entities.dependencies.functions import P
@@ -11,6 +12,7 @@ from time import sleep
 from PyPDF2 import PdfMerger
 import os
 import numpy as nb
+import shutil
 
 
 def test():
@@ -28,6 +30,10 @@ class Execute:
             return "Boa noite"    
         
     def __init__(self) -> None:
+        
+        
+        
+        
         #sharepoint
         crd_sharepoint:dict = Credential('Microsoft-RPA').load()
         self.__sharePoint:APISharePoint = APISharePoint(
@@ -55,8 +61,11 @@ class Execute:
             # Inicia a consulta de chamados na etapa 2
             self.consultar_chamado_etapa_2()
             
-            # Imprime mensagem de finalização do script
+            # Inicia a transferencia dos arquivos pdf punificados para a pasta destino
+            self.coletar_arquivos_controle_etapa_3(target_path=r'\\server008\G\ARQ_PATRIMAR\WORK\Notas Fiscais Digitalizadas\RETENÇÃO TÉCNICA')
+            
             sleep(15*60)
+        # Imprime mensagem de finalização do script
         print(P("Finalizando Script", color='white'))
             
     def criar_chamado_etapa_1(self):
@@ -237,7 +246,7 @@ class Execute:
             
             print(P("Verificação de chamado encerrada"))            
         
-    def coletar_arquivos_controle_etapa_3(self, target_path:str=r'C:\Users\renan.oliveira\Downloads\y'):
+    def coletar_arquivos_controle_etapa_3(self, target_path:str=f'C:\\Users\\{getuser()}\\Downloads'):
         if not os.path.exists(target_path):
             Logs().register(status='Error', description=f"o caminho '{target_path}' não foi encontrado")
             return
@@ -266,7 +275,14 @@ class Execute:
 
                 # Write out the merged PDF
                 if merger.id_count > 0:
-                    merger.write(os.path.join(target_path, f"{value['Id']}-RetençãoTécnica_{value['CodigoBP']}_{value['CodigoEmpreendimento']}.pdf"))
+                    download_temp:str = os.path.join(os.getcwd(), 'download')
+                    if not os.path.exists(download_temp):
+                        os.makedirs(download_temp)
+                    file_path:str = os.path.join(download_temp, f"{value['Id']}-RetençãoTécnica_{value['CodigoBP']}_{value['CodigoEmpreendimento']}.pdf")
+                    
+                    merger.write(file_path)
+                    shutil.move(file_path, target_path)
+                    
                     # Atualiza o número do chamado no SharePoint
                     self.__sharePoint.alterar(int(value['Id']), coluna='RegistroArquivoControle', valor="Copiado")
                 else:
@@ -277,7 +293,9 @@ class Execute:
         
         
     def test(self):
-        self.coletar_arquivos_controle_etapa_3()
+        print("testado")
+        
+        #self.coletar_arquivos_controle_etapa_3(target_path=r'\\server008\G\ARQ_PATRIMAR\WORK\Notas Fiscais Digitalizadas\RETENÇÃO TÉCNICA')
         #self.__sharePoint.alterar(304, coluna='NumChamadoZendesk', valor="52308")
 
 if __name__ == "__main__":
@@ -298,6 +316,8 @@ if __name__ == "__main__":
     argv = sys.argv
     if len(argv) > 1:
         if argv[1] in valid_argvs:
+            
+            
             print(P("Iniciando Automação", color='blue'))
             try:
                 # Executa a função correspondente ao argumento fornecid
