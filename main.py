@@ -55,15 +55,19 @@ class Execute:
         Método principal que inicia a execução das etapas de criação e consulta de chamados.
         """
         while True:
+            print(P("Fazendo nova verificação"))
+            
             # Inicia a criação de chamados na etapa 1
             self.criar_chamado_etapa_1()
             
             # Inicia a consulta de chamados na etapa 2
             self.consultar_chamado_etapa_2()
             
+            sleep(10) # delay para aguardar o pdf subir para o app
             # Inicia a transferencia dos arquivos pdf punificados para a pasta destino
             self.coletar_arquivos_controle_etapa_3(target_path=r'\\server008\G\ARQ_PATRIMAR\WORK\Notas Fiscais Digitalizadas\RETENÇÃO TÉCNICA')
             
+            print(P("Verificação encerrada!"))
             sleep(15*60)
         # Imprime mensagem de finalização do script
         print(P("Finalizando Script", color='white'))
@@ -262,6 +266,7 @@ class Execute:
             if not value['Attachment_Path'] is nb.nan:
                 # List of PDF files to merge
                 pdf_files:List[str] = value['Attachment_Path']
+                
                 
                 # Create a PdfMerger object
                 merger = PdfMerger()
