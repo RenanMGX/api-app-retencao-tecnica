@@ -304,38 +304,41 @@ class Execute:
         #self.__sharePoint.alterar(304, coluna='NumChamadoZendesk', valor="52308")
 
 if __name__ == "__main__":
-    execute = Execute()
-    valid_argvs:Dict[str, object] = {
-        "start" : execute.start,
-        "teste" : execute.test
-    }
-    
-    def informativo():
-        """
-        Função que imprime os argumentos válidos para a execução do script.
-        """
-        print("informe apenas os argumentos validos:")
-        for arg in list(valid_argvs.keys()):
-            print(P(arg))
-    
-    argv = sys.argv
-    if len(argv) > 1:
-        if argv[1] in valid_argvs:
-            
-            
-            print(P("Iniciando Automação", color='blue'))
-            try:
-                # Executa a função correspondente ao argumento fornecid
-                valid_argvs[argv[1]]() # type: ignore
-                Logs().register(status='Concluido', description="automação executou com exito!", csv_register=False)
-            except Exception as error:
-                print(P("um erro ocorreu durante a execução do script", color='red'))
-                print(P((type(error),error),color='red'))
-                Logs().register(status='Error', description="um erro aconteceu durante a execução da automação", exception=traceback.format_exc())
-            
+    try:
+        execute = Execute()
+        valid_argvs:Dict[str, object] = {
+            "start" : execute.start,
+            "teste" : execute.test
+        }
+        
+        def informativo():
+            """
+            Função que imprime os argumentos válidos para a execução do script.
+            """
+            print("informe apenas os argumentos validos:")
+            for arg in list(valid_argvs.keys()):
+                print(P(arg))
+        
+        argv = sys.argv
+        if len(argv) > 1:
+            if argv[1] in valid_argvs:
+                
+                
+                print(P("Iniciando Automação", color='blue'))
+                try:
+                    # Executa a função correspondente ao argumento fornecid
+                    valid_argvs[argv[1]]() # type: ignore
+                    Logs().register(status='Concluido', description="automação executou com exito!", csv_register=False)
+                except Exception as error:
+                    print(P("um erro ocorreu durante a execução do script", color='red'))
+                    print(P((type(error),error),color='red'))
+                    Logs().register(status='Error', description="um erro aconteceu durante a execução da automação", exception=traceback.format_exc())
+                
+            else:
+                print(P("argumento invalido", color='red'))
+                informativo()
         else:
-            print(P("argumento invalido", color='red'))
             informativo()
-    else:
-        informativo()
+    except Exception as err:
+        Logs().register(status='Error', description=str(err), exception=traceback.format_exc())   
         
