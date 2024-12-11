@@ -243,7 +243,7 @@ class APISharePoint:
         for item in items:
             if item.properties.get('RegistroArquivoControle'):
                 continue            
-            if ("Aprovado".lower() in str(item.properties.get('AprovacaoControle')).lower()) and ("Sim".lower() in str(item.properties.get('EnviadoCentral')).lower()):
+            if ("Aprovado".lower() in str(item.properties.get('AprovacaoJuridico')).lower()) and ("Sim".lower() in str(item.properties.get('EnviadoCentral')).lower()):
                 path_attachment_download = []
                 if item.properties['Attachments']:
                     attachment_files = item.attachment_files
