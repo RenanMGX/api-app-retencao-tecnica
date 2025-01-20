@@ -3,7 +3,10 @@ from xlwings.main import Book
 from time import sleep
 from datetime import datetime
 import re
+import colorama
+colorama.init()
 from colorama import Fore
+
 from typing import Literal
 
 class Functions:

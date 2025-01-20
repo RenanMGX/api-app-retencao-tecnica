@@ -221,6 +221,10 @@ class Execute:
                     
                     print(P("não existe pendencias", color='green'))
                 else:
+                    if status == "closed":
+                        self.__sharePoint.alterar(int(value['Id']), coluna='AprovacaoJuridico', valor='Recusado')
+                        print(P("Encerrado sem informar a pendencia", color='red'))
+                        continue
                     print(P("ainda sem resposta", color='yellow'))
                     continue
                 
