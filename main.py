@@ -225,9 +225,9 @@ class Execute:
                     if status == "closed":
                         self.__sharePoint.alterar(int(value['Id']), coluna='AprovacaoJuridico', valor='Recusado')
                         print(P("Encerrado sem informar a pendencia", color='red'))
+                    else:
+                        print(P("ainda sem resposta", color='yellow'))
                         continue
-                    print(P("ainda sem resposta", color='yellow'))
-                    continue
                 
                 comments = self.__zendesk.get(str(value['NumChamadoZendesk']), type='comments').get('response').get('comments')#type: ignore
                 if len(comments) > 1:
