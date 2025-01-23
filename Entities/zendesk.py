@@ -167,12 +167,25 @@ class APIZendesk:
         if tags:
             data["ticket"]["tags"] = tags
         
+        # if attachment_path:
+        #     if (attachment_token:=self.attachment(attachment_path[0])):
+        #         data["ticket"]["comment"] =  {
+        #             #"body": "\n\n testando anexo 0013 \n\n\n",
+        #             "uploads": attachment_token
+        #         }
+                
         if attachment_path:
-            if (attachment_token:=self.attachment(attachment_path[0])):
+            attachments_tokens = []
+            for attachment_file in attachment_path:
+                token = self.attachment(attachment_file)
+                if token:
+                    attachments_tokens.append(token)
+            if attachments_tokens:
                 data["ticket"]["comment"] =  {
-                    #"body": "\n\n testando anexo 0013 \n\n\n",
-                    "uploads": attachment_token
+                    "body": "\n\n anexo \n\n\n",
+                    "uploads": attachments_tokens
                 }
+        
 
         payload = json.dumps(data)
         
