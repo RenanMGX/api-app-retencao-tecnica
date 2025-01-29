@@ -182,7 +182,7 @@ class APIZendesk:
                     attachments_tokens.append(token)
             if attachments_tokens:
                 data["ticket"]["comment"] =  {
-                    "body": "\n\n anexo \n\n\n",
+                    "body": f"\n{descri}\n",
                     "uploads": attachments_tokens
                 }
         

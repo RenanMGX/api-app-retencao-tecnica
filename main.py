@@ -169,10 +169,13 @@ class Execute:
                 # Registra o erro nos logs
                 Logs().register(status='Error', description="erro ao abrir um chamado", exception=str(response))
                     
-    def consultar_chamado_etapa_2(self):
+    def consultar_chamado_etapa_2(self) -> None:
         """
         Consulta os chamados no SharePoint e verifica o status no Zendesk.
         Atualiza o status de aprovação no SharePoint com base na resposta do Zendesk.
+
+        Returns:
+            None
         """
         print(P("listando solicitação para consultar retorno do Juridico"))
         
