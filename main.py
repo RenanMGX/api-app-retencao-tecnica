@@ -15,10 +15,6 @@ import numpy as nb
 import shutil
 from Entities.dependencies.arguments import Arguments
 
-
-def test():
-    print("testado")
-
 class Execute:
     @property
     def tratamento_inicial(self) -> str:
@@ -51,32 +47,27 @@ class Execute:
             password=crd_zendesk['password']
         )
     
-    def start(self):
+    def start_app(self):
         """
         Método principal que inicia a execução das etapas de criação e consulta de chamados.
         """
-        while True:
-            try:
-                print(P("Fazendo nova verificação"))
+        print(P("Fazendo nova verificação"))
                 
-                # Inicia a criação de chamados na etapa 1
-                self.criar_chamado_etapa_1()
+        # Inicia a criação de chamados na etapa 1
+        self.criar_chamado_etapa_1()
                 
-                # Inicia a consulta de chamados na etapa 2
-                self.consultar_chamado_etapa_2()
+        # Inicia a consulta de chamados na etapa 2
+        self.consultar_chamado_etapa_2()
                 
-                sleep(10) # delay para aguardar o pdf subir para o app
-                # Inicia a transferencia dos arquivos pdf punificados para a pasta destino
-                self.coletar_arquivos_controle_etapa_3(target_path=r'\\server008\G\ARQ_PATRIMAR\WORK\Notas Fiscais Digitalizadas\RETENÇÃO TÉCNICA')
+        sleep(10) # delay para aguardar o pdf subir para o app
+        # Inicia a transferencia dos arquivos pdf punificados para a pasta destino
+        self.coletar_arquivos_controle_etapa_3(target_path=r'\\server008\G\ARQ_PATRIMAR\WORK\Notas Fiscais Digitalizadas\RETENÇÃO TÉCNICA')
                 
-                print(P("Verificação encerrada!"))
-            except Exception as err:
-                print(P(f"Erro ao executar o script\n {str(err)}", color='red'))
-                Logs().register(status='Report', description="Erro durante a execução do script", exception=traceback.format_exc())
+        print(P("Verificação encerrada!"))
                 
-            sleep(15*60)
+        #sleep(15*60)
         # Imprime mensagem de finalização do script
-        print(P("Finalizando Script", color='white'))
+        #print(P("Finalizando Script", color='white'))
             
     def criar_chamado_etapa_1(self):
         """
@@ -310,16 +301,29 @@ class Execute:
                 Logs().register(status='Error', description="a coluna de anexo esta vazia2")     
         
         
-    def test(self):
-        print("testado")
+def test(self):
+    print("testado")
         
-        #self.coletar_arquivos_controle_etapa_3(target_path=r'\\server008\G\ARQ_PATRIMAR\WORK\Notas Fiscais Digitalizadas\RETENÇÃO TÉCNICA')
-        #self.__sharePoint.alterar(304, coluna='NumChamadoZendesk', valor="52308")
-
+    #self.coletar_arquivos_controle_etapa_3(target_path=r'\\server008\G\ARQ_PATRIMAR\WORK\Notas Fiscais Digitalizadas\RETENÇÃO TÉCNICA')
+    #self.__sharePoint.alterar(304, coluna='NumChamadoZendesk', valor="52308")
+        
+def start():
+    execute = Execute()
+    while True:
+        try:
+            execute.start_app()
+        except Exception as err:
+            del execute
+            execute = Execute()
+            print(P(f"Erro ao executar o script\n {str(err)}", color='red'))
+            Logs().register(status='Report', description="Erro durante a execução do script", exception=traceback.format_exc())
+        sleep(15*60)            
+        
+        
 if __name__ == "__main__":
     Arguments({
-        'start': Execute().start,
-        'test': Execute().test
+        'start': start,
+        'test': test
     },
     #log_status=None
 )
