@@ -306,10 +306,14 @@ def test(self):
         
     #self.coletar_arquivos_controle_etapa_3(target_path=r'\\server008\G\ARQ_PATRIMAR\WORK\Notas Fiscais Digitalizadas\RETENÇÃO TÉCNICA')
     #self.__sharePoint.alterar(304, coluna='NumChamadoZendesk', valor="52308")
+    
+def limpar_tela():
+    os.system('cls' if os.name == 'nt' else 'clear')
         
 def start():
     execute = Execute()
     while True:
+        limpar_tela()
         try:
             execute.start_app()
         except Exception as err:
