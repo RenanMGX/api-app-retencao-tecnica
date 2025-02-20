@@ -21,7 +21,7 @@ class Execute:
         hora = datetime.now().hour
         if (hora > 6) and (hora < 12):
             return "Bom dia"
-        elif (hora > 12) and (hora < 18):
+        elif (hora >= 12) and (hora < 18):
             return "Boa tarde"
         else:
             return "Boa noite"    
