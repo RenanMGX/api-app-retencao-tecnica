@@ -290,7 +290,11 @@ class Execute:
                     file_path:str = os.path.join(download_temp, f"{value['Id']}-RetençãoTécnica_{value['CodigoBP']}_{value['CodigoEmpreendimento']}.pdf")
                     
                     merger.write(file_path)
-                    shutil.move(file_path, target_path)
+                    
+                    try:
+                        shutil.move(file_path, target_path)
+                    except:
+                        pass
                     
                     # Atualiza o número do chamado no SharePoint
                     self.__sharePoint.alterar(int(value['Id']), coluna='RegistroArquivoControle', valor="Copiado")
