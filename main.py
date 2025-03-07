@@ -329,10 +329,14 @@ def start():
         
         
 if __name__ == "__main__":
-    Arguments({
-        'start': start,
-        'test': test
-    },
-    #log_status=None
-)
+    try:
+        Arguments({
+            'start': start,
+            'test': test
+        },
+        #log_status=None
+    )
+    except Exception as err:
+        print(err)
+        Logs().register(status='Error', description=str(err), exception=traceback.format_exc())
         
