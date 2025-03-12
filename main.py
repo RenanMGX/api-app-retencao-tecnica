@@ -315,16 +315,14 @@ def limpar_tela():
     os.system('cls' if os.name == 'nt' else 'clear')
         
 def start():
-    execute = Execute()
     while True:
         limpar_tela()
         try:
-            execute.start_app()
+            Execute().start_app()
         except Exception as err:
-            del execute
-            execute = Execute()
             print(P(f"Erro ao executar o script\n {str(err)}", color='red'))
             Logs().register(status='Report', description="Erro durante a execução do script", exception=traceback.format_exc())
+
         sleep(15*60)            
         
         
