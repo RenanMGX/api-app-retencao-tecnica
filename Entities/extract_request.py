@@ -216,7 +216,7 @@ class APISharePoint:
         
     def consultar(self, with_attachment:bool=False):
         """Consulta a lista, opcionalmente baixando anexos."""
-        items = self.__lista.get_items()
+        items = self.__lista.get_items().expand(["AttachmentFiles"])
         self.__ctx.load(items)
         self.__ctx.execute_query()
         
@@ -236,8 +236,8 @@ class APISharePoint:
                             continue
                         if item.properties['Attachments']:
                             attachment_files = item.attachment_files
-                            self.__ctx.load(attachment_files)
-                            self.__ctx.execute_query()
+                            #self.__ctx.load(attachment_files)
+                            #self.__ctx.execute_query()
                             for attachment_file in attachment_files:
                                 file_name = os.path.join(self.download_path, f"{item.properties.get('ID')}-{attachment_file.properties['FileName']}")
                                 path_attachment_download.append(file_name)
@@ -268,7 +268,7 @@ class APISharePoint:
     
     def coletar_arquivos_controle(self):
         """Coleta arquivos aprovados, preparando-os para processamento de controle."""
-        items = self.__lista.get_items()
+        items = self.__lista.get_items().expand(["AttachmentFiles"])
         self.__ctx.load(items)
         self.__ctx.execute_query()
         
@@ -280,12 +280,12 @@ class APISharePoint:
             for item in items:
                 if item.properties.get('RegistroArquivoControle'):
                     continue            
-                if ("Aprovado".lower() in str(item.properties.get('AprovacaoJuridico')).lower()) and ("Sim".lower() in str(item.properties.get('EnviadoCentral')).lower()):
+                if (("Aprovado".lower() in str(item.properties.get('AprovacaoJuridico')).lower()) and ("Sim".lower() in str(item.properties.get('EnviadoCentral')).lower())) or True:
                     path_attachment_download = []
                     if item.properties['Attachments']:
                         attachment_files = item.attachment_files
-                        self.__ctx.load(attachment_files)
-                        self.__ctx.execute_query()
+                        #self.__ctx.load(attachment_files)
+                        #self.__ctx.execute_query()
                         for attachment_file in attachment_files:
                             file_name = os.path.join(self.download_path, f"{item.properties.get('ID')}-{attachment_file.properties['FileName']}")
                             path_attachment_download.append(file_name)
