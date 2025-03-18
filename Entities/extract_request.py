@@ -15,6 +15,7 @@ import pandas as pd
 
 from office365.runtime.auth.authentication_context import AuthenticationContext
 from office365.sharepoint.client_context import ClientContext
+from office365.sharepoint.listitems.collection import ListItemCollection
 
         
 class SiteAppReten():
@@ -222,27 +223,41 @@ class APISharePoint:
         self.limpar_pasta_download() if with_attachment else None
         
         list_valid = []
-        for item in items:
-            if not item.properties.get('AprovacaoJuridico'):
-                if with_attachment:
-                    path_attachment_download = []
-                    if item.properties['NumChamadoZendesk']:
-                        continue
-                    if item.properties['Attachments']:
-                        attachment_files = item.attachment_files
-                        self.__ctx.load(attachment_files)
-                        self.__ctx.execute_query()
-                        for attachment_file in attachment_files:
-                            file_name = os.path.join(self.download_path, f"{item.properties.get('ID')}-{attachment_file.properties['FileName']}")
-                            path_attachment_download.append(file_name)
-                            with open(file_name, 'wb')as _file_handle:
-                                attachment_file.download(_file_handle)
-                                self.__ctx.execute_query()
-                            
-                    item.properties['Attachment_Path'] = path_attachment_download
+        
+        while True:
+            for item in items:
+                if not item.properties.get('AprovacaoJuridico'):
+                    if with_attachment:
+                        path_attachment_download = []
+                        if item.properties['NumChamadoZendesk']:
+                            continue
+                        if item.properties['Attachments']:
+                            attachment_files = item.attachment_files
+                            self.__ctx.load(attachment_files)
+                            self.__ctx.execute_query()
+                            for attachment_file in attachment_files:
+                                file_name = os.path.join(self.download_path, f"{item.properties.get('ID')}-{attachment_file.properties['FileName']}")
+                                path_attachment_download.append(file_name)
+                                with open(file_name, 'wb')as _file_handle:
+                                    attachment_file.download(_file_handle)
+                                    self.__ctx.execute_query()
                                 
-                list_valid.append(item.properties)
-                        
+                        item.properties['Attachment_Path'] = path_attachment_download
+                                    
+                    list_valid.append(item.properties)
+            
+            if not items._next_request_url:
+                break
+            
+            next_request_url = items._next_request_url
+            # Remove a parte da URL base, que pode ser algo como "https://patrimar.sharepoint.com/sites/controle/_api"
+            service_root = self.__ctx.service_root_url()
+            if next_request_url.startswith(service_root):
+                next_request_url = next_request_url[len(service_root):]            
+            
+            items = ListItemCollection(self.__ctx, next_request_url)
+            self.__ctx.load(items)
+            self.__ctx.execute_query()                        
                     
         self.__df = pd.DataFrame(list_valid)
             
@@ -257,26 +272,41 @@ class APISharePoint:
         self.limpar_pasta_download()
                 
         list_valid = []
-        for item in items:
-            if item.properties.get('RegistroArquivoControle'):
-                continue            
-            if ("Aprovado".lower() in str(item.properties.get('AprovacaoJuridico')).lower()) and ("Sim".lower() in str(item.properties.get('EnviadoCentral')).lower()):
-                path_attachment_download = []
-                if item.properties['Attachments']:
-                    attachment_files = item.attachment_files
-                    self.__ctx.load(attachment_files)
-                    self.__ctx.execute_query()
-                    for attachment_file in attachment_files:
-                        file_name = os.path.join(self.download_path, f"{item.properties.get('ID')}-{attachment_file.properties['FileName']}")
-                        path_attachment_download.append(file_name)
-                        with open(file_name, 'wb')as _file_handle:
-                            attachment_file.download(_file_handle)
-                            self.__ctx.execute_query()
-                                    
-                item.properties['Attachment_Path'] = path_attachment_download
+        
+        while True:
+            for item in items:
+                if item.properties.get('RegistroArquivoControle'):
+                    continue            
+                if ("Aprovado".lower() in str(item.properties.get('AprovacaoJuridico')).lower()) and ("Sim".lower() in str(item.properties.get('EnviadoCentral')).lower()):
+                    path_attachment_download = []
+                    if item.properties['Attachments']:
+                        attachment_files = item.attachment_files
+                        self.__ctx.load(attachment_files)
+                        self.__ctx.execute_query()
+                        for attachment_file in attachment_files:
+                            file_name = os.path.join(self.download_path, f"{item.properties.get('ID')}-{attachment_file.properties['FileName']}")
+                            path_attachment_download.append(file_name)
+                            with open(file_name, 'wb')as _file_handle:
+                                attachment_file.download(_file_handle)
+                                self.__ctx.execute_query()
                                         
-                list_valid.append(item.properties)
-                                
+                    item.properties['Attachment_Path'] = path_attachment_download
+                                            
+                    list_valid.append(item.properties)
+                    
+            if not items._next_request_url:
+                break
+            
+            next_request_url = items._next_request_url
+            # Remove a parte da URL base, que pode ser algo como "https://patrimar.sharepoint.com/sites/controle/_api"
+            service_root = self.__ctx.service_root_url()
+            if next_request_url.startswith(service_root):
+                next_request_url = next_request_url[len(service_root):]            
+            
+            items = ListItemCollection(self.__ctx, next_request_url)
+            self.__ctx.load(items)
+            self.__ctx.execute_query()   
+                                         
         self.__df = pd.DataFrame(list_valid)    
         
         return self
