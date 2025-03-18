@@ -16,7 +16,7 @@ import pandas as pd
 from office365.runtime.auth.authentication_context import AuthenticationContext
 from office365.sharepoint.client_context import ClientContext
 from office365.sharepoint.listitems.collection import ListItemCollection
-
+from office365.runtime.paths.resource_path import ResourcePath
         
 class SiteAppReten():
     """Gerencia a navegação e extração de dados do site da aplicação de retenção."""
@@ -224,7 +224,10 @@ class APISharePoint:
         
         list_valid = []
         
+        from copy import deepcopy
+        
         while True:
+            #ctx2 = deepcopy(self.__ctx)
             for item in items:
                 if not item.properties.get('AprovacaoJuridico'):
                     if with_attachment:
@@ -255,7 +258,7 @@ class APISharePoint:
             if next_request_url.startswith(service_root):
                 next_request_url = next_request_url[len(service_root):]            
             
-            items = ListItemCollection(self.__ctx, next_request_url)
+            items = ListItemCollection(self.__ctx, ResourcePath(next_request_url))
             self.__ctx.load(items)
             self.__ctx.execute_query()                        
                     
@@ -303,7 +306,7 @@ class APISharePoint:
             if next_request_url.startswith(service_root):
                 next_request_url = next_request_url[len(service_root):]            
             
-            items = ListItemCollection(self.__ctx, next_request_url)
+            items = ListItemCollection(self.__ctx, ResourcePath(next_request_url))
             self.__ctx.load(items)
             self.__ctx.execute_query()   
                                          
