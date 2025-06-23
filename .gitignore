@@ -3,7 +3,15 @@
 *testes.ipynb
 *download
 *Logs
-*ipynb
+*teste.py
+*.ipynb
+*config.init
+*.json
+*Download_Arquivos
+*Bases
+*planilha_base
+*.zip
+*screenshot
 
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,visualstudiocode,venv

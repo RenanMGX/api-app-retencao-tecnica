@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 
-from Entities.dependencies.functions import P
+from patrimar_dependencies.functions import P
 
 class File:
     @property
