@@ -43,13 +43,20 @@ class Processados:
 class Execute:
     @staticmethod
     def start():
-        ExecuteAPP(
-            sharepoint_email=maestro.get_credential(label="Microsoft-RPA", key="email"),
-            sharepoint_password=maestro.get_credential(label="Microsoft-RPA", key="password"),
-            zendesk_user=maestro.get_credential(label="API_ZENDESK", key="user"),
-            zendesk_password=maestro.get_credential(label="API_ZENDESK", key="password")       
-            ).start_app()
-        processados.processados += 1
+        for _ in range(3):
+            try:
+                ExecuteAPP(
+                    maestro=maestro,
+                    sharepoint_email=maestro.get_credential(label="Microsoft-RPA", key="email"),
+                    sharepoint_password=maestro.get_credential(label="Microsoft-RPA", key="password"),
+                    zendesk_user=maestro.get_credential(label="API_ZENDESK", key="user"),
+                    zendesk_password=maestro.get_credential(label="API_ZENDESK", key="password")       
+                    ).start_app()
+                processados.processados += 1
+                break
+            except Exception as err:
+                if _ >= 2:
+                    raise err
         
 
 if __name__ == '__main__':
