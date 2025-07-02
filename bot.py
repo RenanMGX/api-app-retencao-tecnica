@@ -64,9 +64,10 @@ if __name__ == '__main__':
     execution = maestro.get_execution()
     print(f"Task ID is: {execution.task_id}")
     print(f"Task Parameters are: {execution.parameters}")
-
+    
     processados = Processados(1)
-
+    
+    
     try:
         Execute.start()
         

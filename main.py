@@ -34,19 +34,20 @@ class ExecuteAPP:
                 zendesk_password:str
                  
                 ) -> None:
-        self.__maestro:BotMaestroSDK|None = None
+        self.__maestro:BotMaestroSDK|None = maestro
         
         self.__sharePoint:APISharePoint = APISharePoint(
             url="https://patrimar.sharepoint.com/sites/controle",
             lista="RetencaoTecnica",
             email=sharepoint_email,
-            password=sharepoint_password
+            password=sharepoint_password,
+            maestro=maestro
         )
         
         
         self.__zendesk:APIZendesk = APIZendesk(
             user=zendesk_user,
-            password=zendesk_password
+            password=zendesk_password,
         )
     
     def start_app(self):
