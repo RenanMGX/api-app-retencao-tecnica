@@ -28,8 +28,8 @@ class ExecuteAPP:
             return "Boa noite"    
         
     def __init__(self, maestro: BotMaestroSDK|None=None, *,
-                sharepoint_email:str,
-                sharepoint_password:str,
+                azure_client_id:str,
+                azure_client_secret:str,
                 zendesk_user:str,
                 zendesk_password:str
                  
@@ -39,10 +39,11 @@ class ExecuteAPP:
         self.__sharePoint:APISharePoint = APISharePoint(
             url="https://patrimar.sharepoint.com/sites/controle",
             lista="RetencaoTecnica",
-            email=sharepoint_email,
-            password=sharepoint_password,
+            client_id=azure_client_id,
+            client_secret=azure_client_secret,
             maestro=maestro
         )
+        
         
         
         self.__zendesk:APIZendesk = APIZendesk(
@@ -107,6 +108,7 @@ class ExecuteAPP:
         
         # Itera sobre as linhas do DataFrame
         for row, value in df.iterrows():
+            #import pdb; pdb.set_trace()
             # Cria a descrição do chamado
             descri = f"""
             {self.tratamento_inicial}.\n
@@ -144,6 +146,10 @@ class ExecuteAPP:
                     {
                         'id':11062574075671,
                         'value':True
+                    },
+                    {
+                        "id": 34974183081879,
+                        "value": "sim_180dias" if value['OData__x0031_80Dias'].lower() == 'sim' else "não_180dias"
                     }
                     
                 ],
@@ -180,7 +186,8 @@ class ExecuteAPP:
                         title="erro ao abrir um chamado",
                         message=str(response),
                         alert_type=AlertType.ERROR
-                    )                    
+                    )  
+            #break                  
                     
                     
                     
@@ -397,9 +404,9 @@ def limpar_tela():
         
 if __name__ == "__main__":
     #sharepoint
-    crd_sharepoint:dict = Credential(
+    crd_azure:dict = Credential(
         path_raiz=SharePointFolders(r'RPA - Dados\CRD\.patrimar_rpa\credenciais').value,
-        name_file='Microsoft-RPA'
+        name_file='Azure-APP-RetencaoTecnica'
         ).load()
     
     #zendesk
@@ -408,13 +415,13 @@ if __name__ == "__main__":
         name_file='API_ZENDESK'
         ).load()
     
-    print(crd_sharepoint)
-    print(crd_zendesk)
+
     
-    # ExecuteAPP(
-    #     sharepoint_email=crd_sharepoint['email'],
-    #     sharepoint_password=crd_sharepoint['password'],
-    #     zendesk_user=crd_zendesk['user'],
-    #     zendesk_password=crd_zendesk['password']        
-    #     ).start_app()
+    ExecuteAPP(
+        azure_client_id=crd_azure['client_id'],
+        azure_client_secret=crd_azure['client_secret'],
+        zendesk_user=crd_zendesk['user'],
+        zendesk_password=crd_zendesk['password']        
+    ).start_app()
+        
         

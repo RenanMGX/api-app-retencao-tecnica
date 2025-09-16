@@ -14,9 +14,10 @@ from office365.runtime.auth.authentication_context import AuthenticationContext
 from office365.sharepoint.client_context import ClientContext
 from office365.sharepoint.listitems.collection import ListItemCollection
 from office365.runtime.paths.resource_path import ResourcePath
+from office365.runtime.auth.user_credential import UserCredential
+from office365.runtime.auth.client_credential import ClientCredential
+from office365.runtime.auth.token_response import TokenResponse
 from botcity.maestro import * # type: ignore
-
-        
     
 class APISharePoint:
     """Realiza consultas e manipulações em listas do SharePoint."""
@@ -38,18 +39,14 @@ class APISharePoint:
             os.makedirs(download_path)
         return download_path
     
-    def __init__(self, *, maestro:BotMaestroSDK|None=None, url:str, lista:str, email:str|None, password:str|None) -> None:
+    def __init__(self, *, maestro:BotMaestroSDK|None=None, url:str, lista:str, client_id:str|None, client_secret:str|None) -> None:
         """Inicializa a conexão com o SharePoint usando URL, nome da lista e credenciais."""
         self.__maestro:BotMaestroSDK|None = maestro
-        
-        if not ((email) and (password)):
+
+        if not ((client_id) and (client_secret)):
             raise exceptions.CredentialNotFound("não foi possivel identificar as credenciais")
-        
-        self.__ctx_auth = AuthenticationContext(url)
-        if self.__ctx_auth.acquire_token_for_user(email, password):
-            self.__ctx = ClientContext(url, self.__ctx_auth)
-        else:
-            raise PermissionError("não foi possivel acessar a lista")
+                
+        self.__ctx = ClientContext(url).with_credentials(ClientCredential(client_id, client_secret))
         
         self.__lista = self.__ctx.web.lists.get_by_title(lista)
         

@@ -43,15 +43,28 @@ class Processados:
 class Execute:
     @staticmethod
     def start():
+        crd_azure_param = execution.parameters.get("crd_azure")
+        if not isinstance(crd_azure_param, str):
+            raise ValueError("Parâmetro 'crd_azure_param' deve ser uma string representando o label da credencial.")
+        else:
+            crd_azure_param = str(crd_azure_param)
+
+        crd_zendesk_param = execution.parameters.get("crd_zendesk")
+        if not isinstance(crd_zendesk_param, str):
+            raise ValueError("Parâmetro 'crd_zendesk_param' deve ser uma string representando o label da credencial.")
+        else:
+            crd_zendesk_param = str(crd_zendesk_param)
+
+        
         for _ in range(3):
             try:
                 ExecuteAPP(
                     maestro=maestro,
-                    sharepoint_email=maestro.get_credential(label="Microsoft-RPA", key="email"),
-                    sharepoint_password=maestro.get_credential(label="Microsoft-RPA", key="password"),
-                    zendesk_user=maestro.get_credential(label="API_ZENDESK", key="user"),
-                    zendesk_password=maestro.get_credential(label="API_ZENDESK", key="password")       
-                    ).start_app()
+                    azure_client_id=maestro.get_credential(label=crd_azure_param, key="client_id"),
+                    azure_client_secret=maestro.get_credential(label=crd_azure_param, key="client_secret"),
+                    zendesk_user=maestro.get_credential(label=crd_zendesk_param, key="user"),
+                    zendesk_password=maestro.get_credential(label=crd_zendesk_param, key="password")
+                ).start_app()
                 processados.processados += 1
                 break
             except Exception as err:
