@@ -125,20 +125,25 @@ class ExecuteAPP:
                 marca='juridico',
                 titulo=f"Liberação de Retenção - EMPREITEIRO {value['NomeEmpreiteiro']}",
                 descri=descri,
-                ticket_form_id=11062047187479,
+                #ticket_form_id=11062047187479,
+                ticket_form_id=38823221918103,
                 tags=[
+                    # "controle_obras_255",
+                    # "parecer_jurídico" 
                     "controle_obras_255",
-                    "parecer_jurídico" 
+                    "liberação_retenção",
+                    "não_pend_consultivo",
+                    "parecer_jurídico",
                     ],
                 fields=[
                     {
                         'id':11062650498327,
                         'value':"controle_obras_255"
                     },
-                    {
-                        'id':11062458183319,
-                        'value':"parecer_jurídico"
-                    },
+                    # {
+                    #     'id':11062458183319,
+                    #     'value':"parecer_jurídico"
+                    # },
                     {
                         'id':11062562491159,
                         'value':f"{value['CodigoEmpreendimento']} - {value['NomeEmpreendimento']}"
