@@ -89,16 +89,22 @@ class ExecuteAPP:
 
         # Consulta o SharePoint para obter dados com anexos
         self.__sharePoint.consultar(with_attachment=True)
+        #self.__sharePoint.consultar(with_attachment=False)
         
         # Obtém o DataFrame com os dados do SharePoint
         df = self.__sharePoint.df
+        #import pdb; pdb.set_trace()
         
         try:
             # Filtra as linhas que não possuem um número de chamado no Zendesk
-            df = df[~df['NumChamadoZendesk'].notnull()]
+            df = df[
+                (df['AprovacaoControle'] == 'Aprovado') &
+                (~df['NumChamadoZendesk'].notnull())
+            ]
         except KeyError:
             # Se a coluna 'NumChamadoZendesk' não existir, ignora o erro
             pass
+        
         
         # Verifica se o DataFrame está vazio após a filtragem
         if df.empty:
@@ -115,9 +121,20 @@ class ExecuteAPP:
             Gentileza verificar se o Empreiteiro indicado abaixo e se anexo possuí ações judiciais que o impeçam de receber seu saldo de retenção técnica.\n
             CNPJ: {value['CnpjFormatado']}\n 
             EMPREITEIRO: {value['NomeEmpreiteiro']}\n
+            """
+            
+            if (comentario:=value.get('ComentarioControle')):
+                descri += f"""
+                \n
+                Comentário do Controle de Obras:
+                '{comentario}'
+                {"Responsavel: " + res if (res:=value.get('ResponsavelControle')) else None}
+                """
+            
+            descri += """
             \n
             \n
-            este chamado foi aberto automaticamente por nosso sistema robótico.
+            Chamado aberto automaticamente via processo automatizado (RPA).
             """
             
             # Cria um chamado no Zendesk
@@ -212,7 +229,10 @@ class ExecuteAPP:
         
         try:
             # Filtra os dados para incluir apenas aqueles com número de chamado no Zendesk
-            df = df[df['NumChamadoZendesk'].notnull()]
+            df = df[
+                (df['NumChamadoZendesk'].notnull()) &
+                (~df['AprovacaoJuridico'].notnull())
+            ]
         except KeyError:
             pass
         

@@ -65,28 +65,31 @@ class APISharePoint:
         
         from copy import deepcopy
         
+        #import pdb; pdb.set_trace()
+        
         while True:
             #ctx2 = deepcopy(self.__ctx)
             for item in items:
-                if not item.properties.get('AprovacaoJuridico'):
-                    if with_attachment:
-                        path_attachment_download = []
-                        if item.properties['NumChamadoZendesk']:
-                            continue
-                        if item.properties['Attachments']:
-                            attachment_files = item.attachment_files
-                            #self.__ctx.load(attachment_files)
-                            #self.__ctx.execute_query()
-                            for attachment_file in attachment_files:
-                                file_name = os.path.join(self.download_path, f"{item.properties.get('ID')}-{attachment_file.properties['FileName']}")
-                                path_attachment_download.append(file_name)
-                                with open(file_name, 'wb')as _file_handle:
-                                    attachment_file.download(_file_handle)
-                                    self.__ctx.execute_query()
+                #if item.properties.get('AprovacaoJuridico'):
+                #    continue
+                if with_attachment:
+                    path_attachment_download = []
+                    if item.properties['NumChamadoZendesk']:
+                       continue
+                    if item.properties['Attachments']:
+                        attachment_files = item.attachment_files
+                        #self.__ctx.load(attachment_files)
+                        #self.__ctx.execute_query()
+                        for attachment_file in attachment_files:
+                            file_name = os.path.join(self.download_path, f"{item.properties.get('ID')}-{attachment_file.properties['FileName']}")
+                            path_attachment_download.append(file_name)
+                            with open(file_name, 'wb')as _file_handle:
+                                attachment_file.download(_file_handle)
+                                self.__ctx.execute_query()
+                            
+                    item.properties['Attachment_Path'] = path_attachment_download
                                 
-                        item.properties['Attachment_Path'] = path_attachment_download
-                                    
-                    list_valid.append(item.properties)
+                list_valid.append(item.properties)
             
             if not items._next_request_url:
                 break
